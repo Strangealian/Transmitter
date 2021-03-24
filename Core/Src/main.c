@@ -18,12 +18,10 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "stdio.h"
 #include "main.h"
-#include "adc.h"
 #include "dma.h"
 #include "spi.h"
-#include "usb_device.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -94,18 +92,19 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_ADC1_Init();
-  MX_USB_DEVICE_Init();
   MX_SPI1_Init();
+  MX_SPI2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buff, 20);
+  //HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buff, 20);
 
   NRF24L01_Init();
   while (NRF24L01_Check())
   {
-    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    HAL_Delay(300);
+    //HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+    printf("no nrf24l01  ");
+    HAL_Delay(3000);
   }
   for (t = 0; t < 32; t++)
   {
@@ -118,9 +117,11 @@ int main(void)
   mode = ' '; //从空格键开始
   while (1)
   {
+		HAL_Delay(3000);
     if (NRF24L01_TxPacket(tmp_buf) == TX_OK)
     {
-      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, 1);
+      //HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, 1);
+      printf("transmit data succcess  ");
     }
     else
     {
@@ -138,7 +139,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_Delay(1000);
-    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, 1);
+    //HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, 1);
     //		CDC_Transmit_FS(adc_buff[][1], sizeof(adc_buff[][1]));
     //		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
     //		HAL_Delay(300);
@@ -154,7 +155,6 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -172,20 +172,14 @@ void SystemClock_Config(void)
   }
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC | RCC_PERIPHCLK_USB;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
-  PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLL_DIV1_5;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }
@@ -207,7 +201,7 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
